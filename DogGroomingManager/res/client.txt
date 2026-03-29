@@ -1,1 +1,1 @@
-Evgeny,Kutepov, evgeny.kutepov@hotmail.ca, Bailey, Bull Terrier, 5
+Evgeny,Kutepov,evgeny.kutepov@hotmail.ca,Bailey:Bull Terrier:2020-07-23

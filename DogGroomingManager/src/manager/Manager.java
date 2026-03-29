@@ -6,15 +6,20 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
+import java.time.LocalDateTime;
 
 
 public class Manager {
 
     private ArrayList<Client> clients;
     private static final String CLIENT_FILE = "DogGroomingManager/res/client.txt";
+    private static final String APPOINTMENT_FILE = "DogGroomingManager/res/Appointment.txt";
+    private Scanner userInput = new Scanner(System.in);
     
     public Manager() {
         clients = new ArrayList<>();
@@ -28,8 +33,7 @@ public class Manager {
             System.out.println("Enter your choice: ");
             
             try {
-                Scanner scanner = new Scanner(System.in);
-                choice = Integer.valueOf(scanner.nextLine());
+                choice = Integer.valueOf(userInput.nextLine());
             
             switch (choice) {
                 case 1:
@@ -42,19 +46,24 @@ public class Manager {
                     bookAppointment();
                     break;
                 case 4:
-                    viewAppointments();
+                    viewUpcomingAppointments();
                     break;
                 case 5:
-                    removeClient();
+                    searchAppointmentByClient();
                     break;
                 case 6:
+                    updateClient();
+                    break;
+                case 7:
+                    removeClient();
+                    break;
+                case 8:
                     whileOn = false;
                     System.out.println("Exiting the program. Goodbye!");
                     break;
                 default:
-                    System.out.println("Invalid choice. Please try again.");
+                    System.out.println("Invalid choice, Please pick one of the options from the menu.");
             }
-            scanner.close();
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
         }
@@ -62,113 +71,257 @@ public class Manager {
     }
 
     public void menu() {
-        System.out.println("Welcome to the Dog Grooming Manager!");
+        System.out.println("Welcome to the Dog Grooming Manager!\n");
         System.out.println("1. Add Client");
         System.out.println("2. View Clients");
         System.out.println("3. Book Appointment");
         System.out.println("4. View Appointments");
-        System.out.println("5. Remove Client");
-        System.out.println("6. Exit");
+        System.out.println("5. Search Appointment by Client");
+        System.out.println("6. Update Client");
+        System.out.println("7. Remove Client");
+        System.out.println("8. Exit\n");
     }
 
     // Method to add a new client, need to fix infite loop when adding client in.
     public void addClient() {
         try {
-            Scanner scanner = new Scanner(System.in);
             System.out.print("Enter client's first name: ");
-            String firstName = scanner.nextLine();
+            String firstName = userInput.nextLine();
             System.out.print("Enter client's last name: ");
-            String lastName = scanner.nextLine();
+            String lastName = userInput.nextLine();
             System.out.print("Enter client's email: ");
-            String email = scanner.nextLine();  
-            System.out.print("Enter dog's name: ");
-            String dogName = scanner.nextLine();
-            System.out.print("Enter dog's breed: ");
-            String dogBreed = scanner.nextLine();
-            System.out.print("Enter dog's age: ");
-            int dogAge = scanner.nextInt();
-            Client client = new Client(firstName, lastName, email, dogName, dogBreed, dogAge);
-            clients.add(client);
+            String email = userInput.nextLine();
+
+            if (clients.stream().anyMatch(c -> c.getEmail().equalsIgnoreCase(email))) {
+                System.out.println("A client with this email already exists. Please use a different email.\n");
+                return;
+            }
+            
+            List<Dog> dogs = new ArrayList<>();
+            while(true) {
+                System.out.print("Enter dog's name: ");
+                String dogName = userInput.nextLine();
+                System.out.print("Enter dog's breed: ");
+                String dogBreed = userInput.nextLine();
+                System.out.print("Enter dog's date of birth (YYYY-MM-DD): ");
+                LocalDate dogDOB = LocalDate.parse(userInput.nextLine());
+                dogs.add(new Dog(dogName, dogBreed, dogDOB));
+
+                System.out.print("Add another dog for this client? (yes/no): ");
+                String addAnother = userInput.nextLine();
+                if (!addAnother.equalsIgnoreCase("yes")) {
+                    break;
+                }
+            }
+
+            Client newClient = new Client(firstName, lastName, email, dogs);
+            clients.add(newClient);
+
             saveClients();
             System.out.println("Client added successfully!");
         } catch (Exception e) {
             System.out.println("Error adding client: " + e.getMessage());
         }
-        return;
     }
 
     public void viewClients() {
         try {
-            File clientFile = ensureClientFileExists();
-
-            Scanner scanner = new Scanner(clientFile);
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                System.out.println(line);
+            System.out.println("Search for client by Last name: ");
+            String searchLastName = userInput.nextLine();
+            for (Client client : clients) {
+                if (client.getLastName().equalsIgnoreCase(searchLastName)) {
+                    System.out.println(client.getFirstName() + " " + client.getLastName() + " - " + client.getEmail());
+                    for (Dog dog : client.getDogs()) {
+                        System.out.println(" | Dog: " + dog.getDogName() + ", " + dog.getDogBreed() + ", " + dog.getDogAge() + " years old");
+                    }
+                }
             }
-            scanner.close();
         } catch (Exception e) {
             System.out.println("Error viewing clients: " + e.getMessage());
         }
     }
 
+    public void updateClient() {
+        try {
+            System.out.println("Enter client's Last name to update: ");
+            String searchLastName = userInput.nextLine();  
+            Client clientToUpdate = clients.stream()
+                .filter(c -> c.getLastName().equalsIgnoreCase(searchLastName))
+                .findFirst()
+                .orElse(null); 
+            if (clientToUpdate != null) {
+                System.out.print("Enter new first name (leave blank to keep current): ");
+                String newFirstName = userInput.nextLine();
+                if (!newFirstName.isEmpty()) {
+                    clientToUpdate.setFirstName(newFirstName);
+                }
+
+                System.out.print("Enter new last name (leave blank to keep current): ");
+                String newLastName = userInput.nextLine();
+                if (!newLastName.isEmpty()) {
+                    clientToUpdate.setLastName(newLastName);
+                }
+
+                System.out.print("Enter new email (leave blank to keep current): ");
+                String newEmail = userInput.nextLine();
+                if (!newEmail.isEmpty()) {
+                    clientToUpdate.setEmail(newEmail);
+                }
+
+                System.out.print("Do you want to update the client's dogs? (yes/no): ");
+                String updateDogs = userInput.nextLine();
+                if (updateDogs.equalsIgnoreCase("yes")) {
+                    List<Dog> updatedDogs = new ArrayList<>();
+                    while (true) {
+                        System.out.println("Which dog do you want to update?: " + clientToUpdate.getDogs().stream().map(Dog::getDogName).toList());
+                        System.out.print("Enter dog's name: ");
+                        String dogName = userInput.nextLine();
+                        if (clientToUpdate.getDogs().stream().noneMatch(d -> d.getDogName().equalsIgnoreCase(dogName))) {
+                            System.out.println("Dog not found. Please enter a valid dog name.");
+                            continue;
+                        }
+                        System.out.print("Enter dog's breed: ");
+                        String dogBreed = userInput.nextLine();
+                        System.out.print("Enter dog's age: ");
+                        int dogAge = Integer.parseInt(userInput.nextLine());
+                        LocalDate dogDOB = LocalDate.now().minusYears(dogAge);
+                        updatedDogs.add(new Dog(dogName, dogBreed, dogDOB));
+
+                        System.out.print("Add another dog for this client? (yes/no): ");
+                        String addAnother = userInput.nextLine();
+                        if (!addAnother.equalsIgnoreCase("yes")) {
+                            break;
+                        }
+                    }
+                    clientToUpdate.setDogs(updatedDogs);
+                }
+
+                saveClients();
+                System.out.println("Client updated successfully!");
+            } else {
+                System.out.println("Client not found.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error updating client: " + e.getMessage());
+        }
+    }
+
     public void bookAppointment() {
         try {
-            BufferedWriter br = new BufferedWriter(new FileWriter("./res/Appointment.txt", true));
-            Scanner scanner = new Scanner(System.in);
-            System.out.print("Enter client's name: ");
-            String clientName = scanner.nextLine();
-            if (clients.stream().anyMatch(c -> c.getFirstName().equals(clientName))) {
+            File appointmentFile = ensureAppointmentFileExists();
+            BufferedWriter br = new BufferedWriter(new FileWriter(appointmentFile, true));
+            System.out.print("Enter client's Last name: ");
+            String clientLastName = userInput.nextLine();
+            if (clients.stream().anyMatch(c -> c.getLastName().equals(clientLastName))) {
+                System.out.println("Which dog is the appointment for?: " + clients.stream()
+                    .filter(c -> c.getLastName().equalsIgnoreCase(clientLastName))
+                    .flatMap(c -> c.getDogs().stream())
+                    .map(Dog::getDogName)
+                    .toList());
+                
+                System.out.print("Enter dog's name: ");
+                String dogName = userInput.nextLine();
+                if (clients.stream().noneMatch(c -> c.getLastName().equalsIgnoreCase(clientLastName) && c.getDogs().stream().anyMatch(d -> d.getDogName().equalsIgnoreCase(dogName)))) {
+                    System.out.println("Dog not found for the specified client. Please try again.");
+                    br.close();
+                    return;
+                }
                 System.out.print("Enter appointment date (YYYY-MM-DD): ");
-                String date = scanner.nextLine();
+                String date = userInput.nextLine();
                 System.out.print("Enter appointment time (HH:MM): ");
-                String time = scanner.nextLine();
-                br.write(clientName + " - " + date + " " + time);
+                String time = userInput.nextLine();
+                br.write(clientLastName + " - " + date + " " + time);
                 br.newLine();
-                System.out.println("Appointment booked successfully!");
+                System.out.println("\nAppointment booked successfully!\n");
             } else {
                 System.out.println("Client not found. Please add the client first.");
             }
-            br.close();
-            scanner.close();
+                br.close();
 
         } catch (Exception e) {
             System.out.println("Error booking appointment: " + e.getMessage());
         }
     }
 
-    public void viewAppointments() {
+    public void viewUpcomingAppointments() {
         try {
-            File appointmentFile = new File("./res/Appointment.txt");
+            File appointmentFile = ensureAppointmentFileExists();
             if (!appointmentFile.exists()) {
                 System.out.println("No appointments found.");
                 return;
             }
 
-            Scanner scanner = new Scanner(appointmentFile);
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                System.out.println(line);
+            try (BufferedReader br = new BufferedReader(new FileReader(appointmentFile))) {
+                String line;
+
+            LocalDateTime now = LocalDateTime.now();
+            boolean found = false;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(" - ");
+                if (parts.length < 2) {
+                    continue; // Skip malformed lines
+                } 
+
+                String[] dateTimeParts = parts[1].split(" ");
+                if (dateTimeParts.length < 2) {
+                    continue; // Skip malformed lines
+                }
+
+                LocalDateTime appointmentDateTime = LocalDateTime.parse(dateTimeParts[0] + "T" + dateTimeParts[1]);
+                if (appointmentDateTime.isAfter(now)) {
+                    System.out.println(line);
+                    found = true;
+                }
+
+                if (!found) {
+                System.out.println("No upcoming appointments found.");
+                }   
             }
-            scanner.close();
+            
+
         } catch (Exception e) {
-            System.out.println("Error viewing appointments: " + e.getMessage());
+            System.out.println("Error accessing appointments: " + e.getMessage());
         }
     }
 
-    public void removeClient() {
-        
+    public void searchAppointmentByClient() {
+        try {
+            File appointmentFile = ensureAppointmentFileExists();
+            if (!appointmentFile.exists()) {
+                System.out.println("No appointments found.");
+                return;
+            }
 
+            System.out.print("Enter client's Last name to search for appointments: ");
+            String clientLastName = userInput.nextLine();
+
+            try (BufferedReader br = new BufferedReader(new FileReader(appointmentFile))) {
+                String line;
+                boolean found = false;
+                while ((line = br.readLine()) != null) {
+                    if (line.toLowerCase().contains(clientLastName.toLowerCase())) {
+                        System.out.println(line);
+                        found = true;
+                    }
+                }
+
+            if (!found) {
+                System.out.println("No appointments found for client: " + clientLastName);
+            }
+        } catch (Exception e) {
+            System.out.println("Error searching appointments: " + e.getMessage());
+    }
+    }
+
+    public void removeClient() {
         try {
             File clientFile = ensureClientFileExists();
             BufferedReader br = new BufferedReader(new FileReader(clientFile));
-            Scanner scanner = new Scanner(System.in);
             System.out.print("Enter client's last name to remove: ");
-            String clientName = scanner.nextLine();
-            clients.removeIf(c -> c.getLastName().equals(clientName));
+            String clientLastName = userInput.nextLine();
+            clients.removeIf(c -> c.getLastName().equals(clientLastName));
             saveClients();
             System.out.println("Client removed successfully!");
-            scanner.close();
         } catch (Exception e) {
             System.out.println("Error removing client: " + e.getMessage());
         }
@@ -183,15 +336,17 @@ public class Manager {
 
         try {
             File clientFile = ensureClientFileExists();
-            BufferedWriter writer = new BufferedWriter(new FileWriter(clientFile));
-            for (Client client : clients) {
-                writer.write(client.getFirstName() + "," + 
-                client.getLastName() + ", " + client.getEmail() + ", " + 
-                client.getDogName() + ", " + client.getDogBreed() + ", " + 
-                client.getDogAge());
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(clientFile))) {
+                for (Client client : clients) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(client.getFirstName().trim()).append(",").append(client.getLastName().trim()).append(",").append(client.getEmail().trim());
+                    for (Dog dog : client.getDogs()) {
+                        sb.append(",").append(dog.getDogName().trim()).append(":").append(dog.getDogBreed().trim()).append(":").append(dog.getDogDOB());
+                }
+                writer.write(sb.toString());
                 writer.newLine();
             }
-            writer.close();
+        }
         } catch (Exception e) {
             System.out.println("Error saving clients: " + e.getMessage());
         }
@@ -205,28 +360,65 @@ public class Manager {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(",");
-                if (parts.length >= 6) {
-                    try {
-                        Client client = new Client(
-                            parts[0].trim(),
-                            parts[1].trim(),
-                            parts[2].trim(),
-                            parts[3].trim(),
-                            parts[4].trim(),
-                            Integer.parseInt(parts[5].trim())
-                        );
-                        clients.add(client);
-                    } catch (NumberFormatException nfe) {
-                        System.out.println("Invalid dog age in client data: " + line);
+                String firstName = parts[0].trim();
+                String lastName = parts[1].trim();
+                String email = parts[2].trim();
+
+                List<Dog> dogs = new ArrayList<>();
+
+                for (int i = 3; i < parts.length; i++) {
+                    String[] dogParts = parts[i].split(":");
+                    if (dogParts.length == 3) {
+                        String dogName = dogParts[0].trim();
+                        String dogBreed = dogParts[1].trim();
+                        LocalDate dogDOB = LocalDate.now().minusYears(Integer.parseInt(dogParts[2].trim()));
+                       
+                        dogs.add(new Dog(dogName, dogBreed, dogDOB));
                     }
-                } else {
-                    System.out.println("Invalid client data: " + line);
                 }
 
+                clients.add(new Client(firstName, lastName, email, dogs));
             }
             br.close();
         } catch (Exception e) {
             System.out.println("Error loading clients: " + e.getMessage());
+        }
+    }
+
+    public void saveAppointments() {
+        try {
+            File appointmentFile = ensureAppointmentFileExists();
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(appointmentFile))) {
+                for (Client client : clients) {
+                    for (Dog dog : client.getDogs()) {
+                        // Assuming you have a way to get the appointment date and time for each dog
+                        LocalDateTime appointmentDateTime = LocalDateTime.now(); // Placeholder, replace with actual appointment date and time
+                        writer.write(client.getLastName() + " - " + appointmentDateTime.toString());
+                        writer.newLine();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error saving appointments: " + e.getMessage());
+        }
+    }
+
+    public void loadAppointments() {
+        try {
+            File appointmentFile = ensureAppointmentFileExists();
+
+            BufferedReader br = new BufferedReader(new FileReader(appointmentFile));
+            String line;
+            while ((line = br.readLine()) != null) {   
+               String[] parts = line.split(" - ");
+                String client = parts[0].trim();
+
+                String[] dateTimeParts = parts[1].split(" ");
+                LocalDateTime appointmentDateTime = LocalDateTime.parse(dateTimeParts[0] + "T" + dateTimeParts[1]);
+            }
+            br.close();
+        } catch (Exception e) {
+            System.out.println("Error loading appointments: " + e.getMessage());
         }
     }
 
@@ -243,6 +435,21 @@ public class Manager {
         }
 
         return clientFile;
+    }
+
+    private File ensureAppointmentFileExists() throws IOException {
+        File appointmentFile = new File(APPOINTMENT_FILE);
+        File parent = appointmentFile.getParentFile();
+
+        if (parent != null && !parent.exists()) {
+            parent.mkdirs();
+        }
+
+        if (!appointmentFile.exists()) {
+            appointmentFile.createNewFile();
+        }
+
+        return appointmentFile;
     }
 
     

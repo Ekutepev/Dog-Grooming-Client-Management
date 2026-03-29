@@ -1,21 +1,19 @@
 package manager;
 
+import java.util.List;
+
 public class Client {
 
     private String firstName;
     private String lastName;
     private String email;
-    private String dogName;
-    private String dogBreed;
-    private int dogAge;
+    private List<Dog> dogs;
 
-    public Client(String firstName, String lastName, String email, String dogName, String dogBreed, int dogAge) {
+    public Client(String firstName, String lastName, String email, List<Dog> dogs) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.dogName = dogName;
-        this.dogBreed = dogBreed;
-        this.dogAge = dogAge;
+        this.dogs = dogs;
     }
 
     public String getFirstName() {
@@ -30,16 +28,8 @@ public class Client {
         return email;
     }
 
-    public String getDogName() {
-        return dogName;
-    }
-
-    public String getDogBreed() {
-        return dogBreed;
-    }
-
-    public int getDogAge() {
-        return dogAge;
+    public List<Dog> getDogs() {
+        return dogs;
     }
 
     public void setFirstName(String firstName) {
@@ -54,16 +44,8 @@ public class Client {
         this.email = email;
     }
 
-    public void setDogName(String dogName) {
-        this.dogName = dogName;
-    }
-
-    public void setDogBreed(String dogBreed) {
-        this.dogBreed = dogBreed;
-    }
-
-    public void setDogAge(int dogAge) {
-        this.dogAge = dogAge;
+    public void setDogs(List<Dog> dogs) {
+        this.dogs = dogs;
     }
 
     @Override
@@ -72,7 +54,7 @@ public class Client {
                 "firstName= " + firstName + '\'' +
                 ", lastName= " + lastName + '\'' +
                 ", email= " + email + '\'' +
-                ", dogName= " + dogName + '\'' +
+                ", dogs= " + dogs +
                 '}';
     }   
 }
