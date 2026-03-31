@@ -7,11 +7,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.Scanner;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.time.LocalDateTime;
+import java.util.Scanner;
 
 
 public class Manager {
@@ -302,10 +302,10 @@ public class Manager {
                 if (!found) {
                 System.out.println("No appointments found for client: " + clientLastName);
                 }
-            }    
+            }
             
         } catch (Exception e) {
-         System.out.println("Error searching appointments: " + e.getMessage());
+        System.out.println("Error searching appointments: " + e.getMessage());
         }
     }
 
@@ -368,7 +368,7 @@ public class Manager {
                         String dogName = dogParts[0].trim();
                         String dogBreed = dogParts[1].trim();
                         LocalDate dogDOB = LocalDate.parse(dogParts[2].trim());
-                       
+
                         dogs.add(new Dog(dogName, dogBreed, dogDOB));
                     }
                 }
@@ -387,16 +387,16 @@ public class Manager {
             try (BufferedReader br = new BufferedReader(new FileReader(appointmentFile))) {
                 String line;
 
-                while ((line = br.readLine()) != null) {   
+                while ((line = br.readLine()) != null) {
                     String[] parts = line.split(" - ");
                     if (parts.length < 2) {
-                        continue; // Skip malformed lines
+                        continue;
                     } 
 
                     String clientLastName = parts[0].trim();
                     String[] dateTimeParts = parts[1].split(" ");
                     if (dateTimeParts.length < 2) {
-                        continue; // Skip malformed lines
+                        continue;
                     }
 
                     LocalDateTime appointmentDateTime = LocalDateTime.parse(dateTimeParts[0] + "T" + dateTimeParts[1]);
