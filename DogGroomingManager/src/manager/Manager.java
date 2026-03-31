@@ -37,7 +37,7 @@ public class Manager {
             System.out.println("Enter your choice: ");
             
             try {
-                choice = Integer.valueOf(userInput.nextLine());
+                choice = Integer.parseInt(userInput.nextLine());
             
             switch (choice) {
                 case 1:
