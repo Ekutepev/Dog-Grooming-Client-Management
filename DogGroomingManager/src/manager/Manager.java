@@ -100,7 +100,10 @@ public class Manager {
                 System.out.println("A client with this email already exists. Please use a different email.\n");
                 return;
             }
-            
+
+            System.out.print("Enter client's phone number: ");
+            String phoneNumber = userInput.nextLine();
+    
             List<Dog> dogs = new ArrayList<>();
             while(true) {
                 System.out.print("Enter dog's name: ");
@@ -118,7 +121,7 @@ public class Manager {
                 }
             }
 
-            Client newClient = new Client(firstName, lastName, email, dogs);
+            Client newClient = new Client(firstName, lastName, email, dogs, phoneNumber);
             clients.add(newClient);
 
             saveClients();
@@ -131,11 +134,13 @@ public class Manager {
     // Method to view clients, allowing the user to search for clients by their last name and display their details along with their dogs.
     public void viewClients() {
         try {
-            System.out.println("Search for client by Last name: ");
-            String searchLastName = userInput.nextLine();
+            System.out.println("Search for client by Last name or Dog name or phone number: ");
+            String searchInput = userInput.nextLine();
             for (Client client : clients) {
-                if (client.getLastName().equalsIgnoreCase(searchLastName)) {
-                    System.out.println(client.getFirstName() + " " + client.getLastName() + " - " + client.getEmail());
+                if (client.getLastName().equalsIgnoreCase(searchInput) ||
+                    client.getDogs().stream().anyMatch(d -> d.getDogName().equalsIgnoreCase(searchInput)) ||
+                    String.valueOf(client.getPhoneNumber()).equals(searchInput)) {
+                    System.out.println(client.getFirstName() + " " + client.getLastName() + " - " + client.getEmail() + " - " + client.getPhoneNumber());
                     for (Dog dog : client.getDogs()) {
                         System.out.println(" | Dog: " + dog.getDogName() + ", " + dog.getDogBreed() + ", " + dog.getDogAge() + " years old");
                     }
@@ -146,13 +151,15 @@ public class Manager {
         }
     }
 
-    // Method to update an existing client's information, including their name, email, and the details of their dogs.
+    // Method to update an existing client's information, including their name, email, phone number, and the details of their dogs.
     public void updateClient() {
         try {
-            System.out.println("Enter client's Last name to update: ");
-            String searchLastName = userInput.nextLine();  
+            System.out.println("Enter client's by either Last name or Dog name or phone number to update: ");
+            String searchInput = userInput.nextLine();  
             Client clientToUpdate = clients.stream()
-                .filter(c -> c.getLastName().equalsIgnoreCase(searchLastName))
+                .filter(c -> c.getLastName().equalsIgnoreCase(searchInput) ||
+                c.getDogs().stream().anyMatch(d -> d.getDogName().equalsIgnoreCase(searchInput)) ||
+                String.valueOf(c.getPhoneNumber()).equals(searchInput))
                 .findFirst()
                 .orElse(null); 
             if (clientToUpdate != null) {
@@ -173,6 +180,13 @@ public class Manager {
                 if (!newEmail.isEmpty()) {
                     clientToUpdate.setEmail(newEmail);
                 }
+
+                System.out.print("Enter new phone number (leave blank to keep current): ");
+                String newPhoneNumber = userInput.nextLine();
+                if (!newPhoneNumber.isEmpty()) {
+                    clientToUpdate.setPhoneNumber(newPhoneNumber);
+                }
+
 
                 System.out.print("Do you want to update the client's dogs? (yes/no): ");
                 String updateDogs = userInput.nextLine();
@@ -217,18 +231,18 @@ public class Manager {
         try {
             File appointmentFile = ensureAppointmentFileExists();
             try (BufferedWriter br = new BufferedWriter(new FileWriter(appointmentFile, true))) {
-                System.out.print("Enter client's Last name: ");
-                String clientLastName = userInput.nextLine();
-                if (clients.stream().anyMatch(c -> c.getLastName().equalsIgnoreCase(clientLastName))) {
+                System.out.print("Enter client's Last name or phone number: ");
+                String clientIdentifier = userInput.nextLine();
+                if (clients.stream().anyMatch(c -> c.getLastName().equalsIgnoreCase(clientIdentifier)) || clients.stream().anyMatch(c -> c.getPhoneNumber().equals(clientIdentifier))) {
                     System.out.println("Which dog is the appointment for?: " + clients.stream()
-                        .filter(c -> c.getLastName().equalsIgnoreCase(clientLastName))
+                        .filter(c -> c.getLastName().equalsIgnoreCase(clientIdentifier) || c.getPhoneNumber().equals(clientIdentifier))
                         .flatMap(c -> c.getDogs().stream())
                         .map(Dog::getDogName)
                         .toList());
                     
                     System.out.print("Enter dog's name: ");
                     String dogName = userInput.nextLine();
-                    if (clients.stream().noneMatch(c -> c.getLastName().equalsIgnoreCase(clientLastName) && c.getDogs().stream().anyMatch(d -> d.getDogName().equalsIgnoreCase(dogName)))) {
+                    if (clients.stream().noneMatch(c -> (c.getLastName().equalsIgnoreCase(clientIdentifier) || c.getPhoneNumber().equals(clientIdentifier)) && c.getDogs().stream().anyMatch(d -> d.getDogName().equalsIgnoreCase(dogName)))) {
                         System.out.println("Dog not found for the specified client. Please try again.");
                         return;
                     }
@@ -246,10 +260,10 @@ public class Manager {
                         return;
                     }
 
-                    br.write(clientLastName + "(" + dogName + ") - " + date + " " + time);
+                    br.write(clientIdentifier + "(" + dogName + ") - " + date + " " + time);
                     br.newLine();
 
-                    appointments.add(new Appointment(clientLastName, appointmentDateTime));
+                    appointments.add(new Appointment(clientIdentifier, appointmentDateTime));
 
                     System.out.println("\nAppointment booked successfully!\n");
                     } else {
@@ -343,7 +357,8 @@ public class Manager {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(clientFile))) {
                 for (Client client : clients) {
                     StringBuilder sb = new StringBuilder();
-                    sb.append(client.getFirstName().trim()).append(",").append(client.getLastName().trim()).append(",").append(client.getEmail().trim());
+                    sb.append(client.getFirstName().trim()).append(",").append(client.getLastName().trim()).append(",").append(client.getEmail().trim())
+                    .append(",").append(client.getPhoneNumber().trim());
                     for (Dog dog : client.getDogs()) {
                         sb.append(",").append(dog.getDogName().trim()).append(":").append(dog.getDogBreed().trim()).append(":").append(dog.getDogDOB());
                 }
@@ -368,21 +383,23 @@ public class Manager {
                 String firstName = parts[0].trim();
                 String lastName = parts[1].trim();
                 String email = parts[2].trim();
+                String phoneNumber = parts[3].trim();
 
                 List<Dog> dogs = new ArrayList<>();
 
-                for (int i = 3; i < parts.length; i++) {
+                for (int i = 4; i < parts.length; i++) {
                     String[] dogParts = parts[i].split(":");
                     if (dogParts.length == 3) {
                         String dogName = dogParts[0].trim();
                         String dogBreed = dogParts[1].trim();
                         LocalDate dogDOB = LocalDate.parse(dogParts[2].trim());
 
+
                         dogs.add(new Dog(dogName, dogBreed, dogDOB));
                     }
                 }
 
-                clients.add(new Client(firstName, lastName, email, dogs));
+                clients.add(new Client(firstName, lastName, email, dogs, phoneNumber));
             }
         } catch (Exception e) {
             System.out.println("Error loading clients: " + e.getMessage());

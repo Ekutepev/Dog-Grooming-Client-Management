@@ -8,12 +8,14 @@ public class Client {
     private String lastName;
     private String email;
     private List<Dog> dogs;
+    private String phoneNumber;
 
-    public Client(String firstName, String lastName, String email, List<Dog> dogs) {
+    public Client(String firstName, String lastName, String email, List<Dog> dogs, String phoneNumber) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.dogs = dogs;
+        this.phoneNumber = phoneNumber;
     }
 
     public String getFirstName() {
@@ -32,6 +34,10 @@ public class Client {
         return dogs;
     }
 
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
@@ -48,6 +54,10 @@ public class Client {
         this.dogs = dogs;
     }
 
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
     @Override
     public String toString() {
         return "Client{" +
@@ -55,6 +65,7 @@ public class Client {
                 ", lastName= " + lastName + '\'' +
                 ", email= " + email + '\'' +
                 ", dogs= " + dogs +
+                ", phoneNumber= " + phoneNumber +
                 '}';
     }   
 }
