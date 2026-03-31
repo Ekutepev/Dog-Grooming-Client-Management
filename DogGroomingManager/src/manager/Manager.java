@@ -22,6 +22,7 @@ public class Manager {
     private static final String APPOINTMENT_FILE = "DogGroomingManager/res/Appointment.txt";
     private Scanner userInput = new Scanner(System.in);
     
+    // Constructor to initialize the manager, load clients and appointments, and start the main menu loop.
     public Manager() {
         clients = new ArrayList<>();
         appointments = new ArrayList<>();
@@ -72,7 +73,7 @@ public class Manager {
         }
         }
     }
-
+    // Method to display the main menu options to the user.
     public void menu() {
         System.out.println("Welcome to the Dog Grooming Manager!\n");
         System.out.println("1. Add Client");
@@ -85,7 +86,7 @@ public class Manager {
         System.out.println("8. Exit\n");
     }
 
-    // Method to add a new client, need to fix infite loop when adding client in.
+    // Method to add a new client with the ability to add multiple dogs for each client.
     public void addClient() {
         try {
             System.out.print("Enter client's first name: ");
@@ -127,6 +128,7 @@ public class Manager {
         }
     }
 
+    // Method to view clients, allowing the user to search for clients by their last name and display their details along with their dogs.
     public void viewClients() {
         try {
             System.out.println("Search for client by Last name: ");
@@ -144,6 +146,7 @@ public class Manager {
         }
     }
 
+    // Method to update an existing client's information, including their name, email, and the details of their dogs.
     public void updateClient() {
         try {
             System.out.println("Enter client's Last name to update: ");
@@ -209,6 +212,7 @@ public class Manager {
         }
     }
 
+    // Method to book an appointment for a client's dog, ensuring that the appointment time does not conflict with existing appointments and providing feedback if the appointment is in the past.
     public void bookAppointment() {
         try {
             File appointmentFile = ensureAppointmentFileExists();
@@ -258,6 +262,7 @@ public class Manager {
         }
     }
 
+    // Method to view upcoming appointments, displaying the client's last name, dog's name, and appointment date and time, while also handling cases where there are no upcoming appointments.
     public void viewUpcomingAppointments() {
         try {
             LocalDateTime now = LocalDateTime.now();
@@ -278,6 +283,7 @@ public class Manager {
         }
     }
 
+    // Method to search for appointments by client's last name, displaying all appointments associated with the specified client and providing feedback if no appointments are found.
     public void searchAppointmentByClient() {
         try {
             File appointmentFile = ensureAppointmentFileExists();
@@ -309,6 +315,7 @@ public class Manager {
         }
     }
 
+    // Method to remove a client from the system, allowing the user to specify the client's last name and ensuring that the client's information is deleted from the client list and saved to the file.
     public void removeClient() {
         try {
             File clientFile = ensureClientFileExists();
@@ -323,6 +330,7 @@ public class Manager {
         }
     }
 
+    // Method to save the list of clients to a file, ensuring that the clients are sorted by last name, first name, and email before saving, and handling any potential errors during the file writing process.
     public void saveClients() {
         clients.sort(
             Comparator.comparing((Client c) -> c.getLastName().trim().toLowerCase())
@@ -348,6 +356,7 @@ public class Manager {
         }
     }
 
+    // Method to load clients from a file, ensuring that the client information is read correctly and that any potential errors during the file reading process are handled gracefully.
     public void loadClients() {
         try {
             File clientFile = ensureClientFileExists();
@@ -380,6 +389,7 @@ public class Manager {
         }
     }
 
+    // Method to load appointments from a file, ensuring that the appointment information is read correctly and that any potential errors during the file reading process are handled gracefully.
     public void loadAppointments() {
         try {
             File appointmentFile = ensureAppointmentFileExists();
@@ -391,7 +401,7 @@ public class Manager {
                     String[] parts = line.split(" - ");
                     if (parts.length < 2) {
                         continue;
-                    } 
+                    }
 
                     String clientLastName = parts[0].trim();
                     String[] dateTimeParts = parts[1].split(" ");
