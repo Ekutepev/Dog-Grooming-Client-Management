@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 
 public class Manager {
@@ -193,7 +194,7 @@ public class Manager {
                 if (updateDogs.equalsIgnoreCase("yes")) {
                     List<Dog> updatedDogs = new ArrayList<>();
                     while (true) {
-                        System.out.println("Which dog do you want to update?: " + clientToUpdate.getDogs().stream().map(Dog::getDogName).toList());
+                        System.out.println("Which dog do you want to update?: " + clientToUpdate.getDogs().stream().map(Dog::getDogName).collect(Collectors.toList()));
                         System.out.print("Enter dog's name: ");
                         String dogName = userInput.nextLine();
                         if (clientToUpdate.getDogs().stream().noneMatch(d -> d.getDogName().equalsIgnoreCase(dogName))) {
@@ -238,7 +239,7 @@ public class Manager {
                         .filter(c -> c.getLastName().equalsIgnoreCase(clientIdentifier) || c.getPhoneNumber().equals(clientIdentifier))
                         .flatMap(c -> c.getDogs().stream())
                         .map(Dog::getDogName)
-                        .toList());
+                        .collect(Collectors.toList()));
                     
                     System.out.print("Enter dog's name: ");
                     String dogName = userInput.nextLine();
